@@ -1,3 +1,12 @@
+/** shell.c
+ *
+ * Author: Benjamin Mallin
+ *
+ * This file contains the shell implementation.
+ * The main bits are in shell_execute and shell_repl.
+ * Other functions are for user I/O or are helper functions.
+ */
+
 #include <sys/wait.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -40,7 +49,7 @@ void* shell_not_null(void* buffer, const char* message)
 int shell_is_background(char* string)
 {
     size_t length = strlen(string);
-    log_info("Last char: %c", string[length - 1]);
+    
     if (string[length - 1] == SHELL_EXECUTE_BACKGROUND_TOKEN)
     {
         string[length - 1] = '\0';
@@ -109,7 +118,7 @@ char* shell_read_input()
  * Returns a NULL-terminated array of tokens.
  */
 char** shell_tokenize_input(char* string)
-{
+{    
     size_t current_buffer_size = SHELL_INPUT_BUFFER_SIZE;
     char** token_buffer = calloc(
         current_buffer_size,
@@ -214,6 +223,8 @@ void shell_repl(void)
         char* input = shell_read_input();
         
         // User only entered a newline.
+        // If we don't do this, we get
+        // a segfault.
         if (input[0] == '\0')
         {
             continue;
@@ -225,10 +236,9 @@ void shell_repl(void)
 
         char** execute_args = shell_tokenize_input(input);
 
-        log_info("Background Execute: %d", background_execute);
-
         should_exit = shell_execute(execute_args, background_execute);
 
+        // Free allocated memory. 
         free(input);
         free(execute_args);
     }

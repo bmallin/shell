@@ -1,3 +1,13 @@
+/** shell.h
+ *
+ * Author: Benjamin Mallin
+ *
+ * Header file for shell.c. 
+ *
+ * This file defines constants used in the program
+ * as well as function declarations for shell.c.
+ */
+
 #ifndef SHELL_SHELL_H
 #define SHELL_SHELL_H
 
