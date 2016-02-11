@@ -29,14 +29,21 @@ void* shell_not_null(void* buffer, const char* message)
 }
 
 /**
- *
+ * Determine if command should be run in the background.
+ * 
+ * Returns 1 if command should be run in the background
+ * and 0 if it should not. 
+ * 
+ * Note: The `string` argument is modified if a & character
+ *       is found at the end.
  */
 int shell_is_background(char* string)
 {
     size_t length = strlen(string);
-
+    log_info("Last char: %c", string[length - 1]);
     if (string[length - 1] == SHELL_EXECUTE_BACKGROUND_TOKEN)
     {
+        string[length - 1] = '\0';
         return 1;
     }
 
@@ -52,7 +59,7 @@ int shell_is_background(char* string)
  * Initial buffer size is determined by SHELL_INPUT_BUFFER_SIZE.
  * Buffer growth rate is determined by SHELL_INPUT_BUFFER_GROWTH.
  *
- * Returns a null-terminated string.
+ * Returns a null-terminated string containing the user's input.
  */
 char* shell_read_input()
 {
@@ -97,7 +104,9 @@ char* shell_read_input()
 }
 
 /**
- *
+ * Tokenizes the `string` given. 
+ * 
+ * Returns a NULL-terminated array of tokens.
  */
 char** shell_tokenize_input(char* string)
 {
@@ -139,10 +148,24 @@ char** shell_tokenize_input(char* string)
     return token_buffer;
 }
 
+/**
+ * Executes the given command.
+ *
+ * Always returns 0, unless the exit command is given.
+ */
 int shell_execute(char** arguments, int background)
 {
     pid_t pid;
     int status;
+
+    if (strcmp(arguments[0], "exit") == 0)
+    {
+        return 1;
+    }
+    else if (strcmp(arguments[0], "quit") == 0)
+    {
+        return 1;
+    }
 
     pid = fork();
     if (pid < 0)
@@ -159,6 +182,11 @@ int shell_execute(char** arguments, int background)
     }
     else
     {
+        if (background)
+        {
+            return 0;
+        }
+
         do
         {
             waitpid(pid, &status, WUNTRACED);
@@ -169,10 +197,14 @@ int shell_execute(char** arguments, int background)
     return 0;
 }
 
+/**
+ * Execute a read-evaluate-print loop.
+ * 
+ * Reads user input, tokenizes it, and attempts
+ * to run it as a command.
+ */
 void shell_repl(void)
 {
-    log_info("Shell Started...");
-
     int should_exit = 0;
 
     while (should_exit != 1)
@@ -180,17 +212,22 @@ void shell_repl(void)
         printf("%s", SHELL_PROMPT);
 
         char* input = shell_read_input();
+        
+        // User only entered a newline.
+        if (input[0] == '\0')
+        {
+            continue;
+        }
+
+        // This needs to come before the call to shell_tokenize_input
+        // since shell_tokenize_input modifies the input.
+        int background_execute = shell_is_background(input);        
+
         char** execute_args = shell_tokenize_input(input);
-
-        log_info("User Input: %s", input);
-
-        int background_execute = shell_is_background(input);
 
         log_info("Background Execute: %d", background_execute);
 
         should_exit = shell_execute(execute_args, background_execute);
-
-        log_info("Status: %d", should_exit);
 
         free(input);
         free(execute_args);
@@ -198,3 +235,4 @@ void shell_repl(void)
 
     puts("");
 }
+
