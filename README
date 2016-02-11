@@ -1,0 +1,7 @@
+# MyShell
+
+Building:
+    To build, simply run `make` or `make -f Makefile`.
+
+    Alternatively, CMake may be used with the provided,
+    CMakeLists.txt file.
