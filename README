@@ -1,5 +1,7 @@
 # MyShell
 
+Simple shell written for an OS class assignment.
+
 Building:
     To build, simply run `make` or `make -f Makefile`.
 
